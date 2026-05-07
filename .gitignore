@@ -1,0 +1,13 @@
+# Database files (too large for GitHub)
+test_db
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Data files
+data/*.csv
+data/*.parquet
