@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: covid
+    database: test_db
+    schema: main
+    tables:
+      - name: test_db
+        description: "Raw COVID-19 daily reports from Johns Hopkins University"
+
