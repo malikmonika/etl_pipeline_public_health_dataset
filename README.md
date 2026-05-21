@@ -1,34 +1,71 @@
-# COVID-19 ETL Pipeline
+# COVID-19 ETL Pipeline + dbt Analytics Layer
 
-An ETL pipeline that ingests Johns Hopkins University
-COVID-19 daily reports, transforms and standardizes
-the data, and loads it into a SQLite database.
+End-to-end data platform ingesting Johns Hopkins University 
+COVID-19 daily reports — Python ETL pipeline feeding a 
+dbt star schema analytics layer.
 
 ## Architecture
 
-GitHub API → Extract CSVs → Transform → SQLite DB
+GitHub API (1200+ CSV files)
+        ↓
+Python ETL (main.py)
+  → Schema evolution handling
+  → pandas transformation
+  → SQLite loading
+        ↓
+SQLite database (3,709,419 rows · 157MB)
+        ↓
+dbt analytics layer (covid_analytics/)
+  → stg_covid_daily_reports (staging)
+  → fact_country_totals (fact table)
+  → dim_country (dimension table)
+  → mart_top_10_countries (mart)
+        ↓
+6 automated data quality tests passing
 
 ## What it does
 
-- Fetches 1200+ daily COVID CSV files from JHU GitHub
-- Standardizes column names across schema versions
-- Handles schema evolution across 1200 files
-- Adds missing columns as NaN for consistency
-- Loads clean data into SQLite for querying
+- Fetches 1200+ daily COVID CSV files from JHU GitHub API
+- Handles real-world schema evolution — column names 
+  changed multiple times across 3 years of data
+- Loads 3,709,419 rows into structured SQLite database
+- Transforms raw data into Kimball star schema using dbt
+- Runs automated data quality tests on every model
+- Auto-generates data catalog with dbt docs
 
 ## Tech Stack
 
-Python · pandas · SQLite · requests · numpy
+Python · pandas · SQLite · requests · numpy · dbt
 
-## How to run
+## Results — Top 10 Most Affected Countries
 
-Install dependencies
+| Rank | Country | Confirmed | Deaths |
+|---|---|---|---|
+| 1 | France | 38,618,509 | 161,512 |
+| 2 | Korea, South | 30,615,522 | 34,093 |
+| 3 | United Kingdom | 20,656,177 | 186,138 |
+| 4 | Turkey | 17,042,722 | 101,492 |
+| 5 | Vietnam | 11,526,994 | 43,186 |
+| 6 | Argentina | 10,044,957 | 130,472 |
+| 7 | Taiwan | 9,970,937 | 17,672 |
+| 8 | India | 8,138,129 | 148,424 |
+| 9 | Germany | 8,048,396 | 31,400 |
+| 10 | Iran | 7,572,311 | 144,933 |
 
-    pip install pandas requests numpy
+## How to Run
 
-Run the pipeline
+### Python ETL pipeline
 
-    python3 main.py
+pip install pandas requests numpy
+python3 main.py
+
+### dbt analytics layer
+
+cd covid_analytics
+pip install dbt-core dbt-sqlite
+dbt run
+dbt test
+dbt docs generate && dbt docs serve
 
 ## Data Quality Handling
 
@@ -37,51 +74,37 @@ Run the pipeline
 | Missing columns | Added as NaN |
 | Inconsistent column names | Standardized via mapping |
 | Schema evolution | Detected and normalized |
+| Null critical fields | Filtered in staging layer |
+| Duplicate countries | unique dbt test enforced |
 
-## What I learned
+## DE Concepts Demonstrated
 
-- pandas data cleaning at scale
+- Python ETL pipeline at scale (3.7M rows)
 - Schema evolution handling across 1200 files
-- ETL pipeline structure in Python
-- SQLite as a lightweight local data store
+- Kimball star schema — fact + dimension modeling
+- dbt staging → fact → dimension → mart layers
+- Data quality as code (dbt tests in schema.yml)
+- Auto-generated data documentation (dbt docs)
+- Window functions — DENSE_RANK for ranking
+- CTE pattern for analytical queries
 
-## SQL queries to be executed
-1. Top 10 countries by confirmed cases
-2. Daily death rate trend (rolling average)
-3. Month over month growth by country (LAG)
-4. Case fatality ratio by region (window function)
-5. Countries with highest recovery rate
-6. Level 1 — Aggregations & Grouping
+## What I Learned
 
-Top 10 countries by total confirmed cases
-Total deaths per country — filter only countries with more than 10,000 deaths
-Countries with highest recovery rate (only countries with 50,000+ confirmed)
+- Schema evolution is a real DE challenge —
+  handling it gracefully is what separates
+  production pipelines from toy projects
+- dbt enforces separation of concerns —
+  staging cleans, facts aggregate, marts answer
+- Data quality tests belong in the pipeline,
+  not as an afterthought
+- Kimball modeling starts with business questions,
+  not technical schema design
 
-Level 2 — Window Functions
+## What I Would Do Differently at Scale
 
-Rank countries by confirmed cases using DENSE_RANK
-Case fatality ratio per country with global average comparison
-Top 3 provinces per country by confirmed cases
-
-Level 3 — LAG / LEAD & Rolling Averages
-
-Month over month confirmed case growth for US, India, Brazil
-7-day rolling average of deaths for US
-Day over day new cases using LAG and LEAD together
-
-Level 4 — CTEs & Advanced Patterns
-
-Countries above global average fatality rate using 2 CTEs
-Deduplicate — keep only the latest record per country
-Running total of global confirmed cases over time
-Find countries where deaths increased but recoveries decreased (anomaly detection)
-Categorize countries by pandemic severity using CASE WHEN
-Full pipeline data quality check query
-
-
-Your readiness after each level
-After Q1–Q3  → 70%  — Startup screening ready
-After Q4–Q6  → 78%  — Mid-size phone screen ready
-After Q7–Q9  → 85%  — Amazon phone screen ready
-After Q10–Q15 → 95% — Amazon onsite ready
-Start Q1 and paste your answer here — I'll review it exactly like before.
+- Snowflake or BigQuery instead of SQLite
+- Airflow DAG for scheduled daily runs
+- Incremental dbt models — only process new data
+- dbt snapshots for SCD Type 2 history tracking
+- Great Expectations for anomaly detection
+- Kafka for real-time ingestion instead of batch
