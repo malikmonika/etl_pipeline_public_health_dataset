@@ -1,0 +1,55 @@
+# ============================================
+# Schema: Marts Layer
+# ============================================
+# Description:
+#   Defines models, column descriptions and
+#   data quality tests for the marts layer.
+#   Tests run automatically after every dbt run.
+#
+# Models defined here:
+#   - fact_country_totals  (fact table)
+#   - dim_country          (dimension table)
+#   - mart_top_10_countries (analytics mart)
+#
+# Tests applied:
+#   - not_null: critical columns never empty
+#   - unique: no duplicate country rows
+#
+# DE concepts demonstrated:
+#   - Data quality as code
+#   - Automated testing in pipelines
+#   - dbt schema documentation
+# ============================================
+
+version: 2
+
+models:
+  - name: fact_country_totals
+    description: "Peak COVID metrics per country"
+    columns:
+      - name: country
+        description: "Country name"
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_country
+    description: "Unique country list"
+    columns:
+      - name: country
+        description: "Country name"
+        tests:
+          - not_null
+          - unique
+
+  - name: mart_top_10_countries
+    description: "Top 10 countries by confirmed cases"
+    columns:
+      - name: rank
+        description: "Rank by confirmed cases"
+        tests:
+          - not_null
+      - name: country
+        description: "Country name"
+        tests:
+          - not_null
