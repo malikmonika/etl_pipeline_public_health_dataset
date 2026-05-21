@@ -6,14 +6,30 @@ of raw data into a clean, tested, and documented
 star schema using dbt.
 
 ## Architecture
+
 Raw SQLite (3.7M rows)
-↓
+        ↓
 stg_covid_daily_reports   ← staging: clean + standardize
-↓
+        ↓
 fact_country_totals        ← fact: peak metrics per country
 dim_country                ← dimension: unique countries
-↓
+        ↓
 mart_top_10_countries      ← mart: ranked analytics
+
+## dbt Lineage Graph
+
+![dbt Lineage](screenshots/lineage.png)
+*Auto-generated lineage showing model dependencies*
+
+## dbt Data Catalog
+
+![dbt Docs](screenshots/docs.png)
+*Auto-generated documentation for all models*
+
+## Test Results
+
+![dbt Tests](screenshots/tests.png)
+*6 of 6 data quality tests passing*
 
 ## What this project does
 
